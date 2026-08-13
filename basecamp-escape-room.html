@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Basecamp Escape Room | Meet Your Crew</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script>
+/* ============================================================
+   STATION DATA — edit prompts, ciphers, or answers here.
+   type: "verified"  -> single correct answer, checked exactly
+   type: "checkin"   -> team's own answer, logged (not graded)
+   ============================================================ */
+const STATIONS = [
+  {
+    id: 1,
+    type: 'checkin',
+    number: '01',
+    title: 'Crew Manifest',
+    prompt: "Go around your team. Each person shares: their name, one place they'd love to visit someday, and their go-to comfort food. Once everyone has shared, count together: how many of the PLACES your team named are outside the country you're in right now? That total is your Manifest Count.",
+    inputLabel: 'Manifest Count',
+    placeholder: 'e.g. 3'
+  },
+  {
+    id: 2,
+    type: 'verified',
+    number: '02',
+    title: 'The Supply Cipher',
+    prompt: 'Every crew needs a way to keep messages secret. Decode the transmission below using this key: A=1, B=2, C=3 … all the way to Z=26. Each number is one letter — string them together to get your codeword.',
+    transmission: '3 – 18 – 5 – 23',
+    answer: 'CREW',
+    inputLabel: 'Decoded Word',
+    placeholder: 'Type the word'
+  },
+  {
+    id: 3,
+    type: 'checkin',
+    number: '03',
+    title: 'Common Ground',
+    prompt: 'Find THREE things every single person on your team has in common — silly ("we all like pineapple pizza") or surprising ("we all have a younger sibling") both count. Once you have three, count the total letters across all three words or phrases (e.g. "pizza" + "summer" + "dogs" = 5 + 6 + 4 = 15). That total is your Common Ground Number.',
+    inputLabel: 'Common Ground Number',
+    placeholder: 'e.g. 15'
+  },
+  {
+    id: 4,
+    type: 'verified',
+    number: '04',
+    title: 'The Icebreaker Cipher',
+    prompt: 'One more transmission just came through. Same key as before: A=1, B=2, C=3 … Z=26.',
+    transmission: '2 – 1 – 19 – 5 – 3 – 1 – 13 – 16',
+    answer: 'BASECAMP',
+    inputLabel: 'Decoded Word',
+    placeholder: 'Type the word'
+  },
+  {
+    id: 5,
+    type: 'checkin',
+    number: '05',
+    title: 'Future Expedition',
+    prompt: "If your team could go on ONE expedition together this year — real or completely made up — where would you go, and why? Talk it through as a group, then agree on a team name inspired by your answer.",
+    inputLabel: 'Crew Name',
+    placeholder: 'Type your crew name'
+  }
+];
+</script>
+<style>
+  :root{
+    --navy-deep:#0a1a2c;
+    --navy:#10233b;
+    --navy-mid:#17324f;
+    --navy-light:#1f4066;
+    --gold:#d4af55;
+    --gold-deep:#a8842a;
+    --gold-pale:#f0cd7a;
+    --cream:#f3ede0;
+    --cream-soft:#cfc6b3;
+    --ok-green:#6f9c6a;
+    --stamp-red:#b5573b;
+    --font-serif:'Playfair Display', Georgia, serif;
+    --font-sans:'DM Sans', -apple-system, sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--navy-deep);
+    color:var(--cream);
+    font-family:var(--font-sans);
+    line-height:1.55;
+  }
+  .sr-only{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
+  a{color:var(--gold-pale);}
+
+  header.site-header{
+    position:relative;
+    text-align:center;
+    padding:56px 20px 40px;
+    border-bottom:1px solid var(--navy-light);
+    overflow:hidden;
+  }
+  .rosette{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:520px; height:520px; opacity:0.06; pointer-events:none;
+  }
+  .eyebrow{
+    font-family:var(--font-mono);
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    font-size:12px;
+    color:var(--gold-pale);
+    position:relative;
+  }
+  h1.site-title{
+    font-family:var(--font-serif);
+    font-weight:700;
+    font-size:clamp(2.2rem, 5vw, 3.4rem);
+    color:var(--gold);
+    margin:14px 0 10px;
+    position:relative;
+  }
+  .site-tagline{
+    max-width:640px;
+    margin:0 auto;
+    color:var(--cream-soft);
+    font-size:17px;
+    position:relative;
+  }
+  .header-actions{
+    margin-top:24px;
+    display:flex;
+    gap:12px;
+    justify-content:center;
+    flex-wrap:wrap;
+    position:relative;
+  }
+
+  button{
+    font-family:var(--font-sans);
+    cursor:pointer;
+  }
+  .btn{
+    font-weight:600;
+    font-size:14px;
+    padding:10px 20px;
+    border-radius:999px;
+    border:1px solid var(--navy-light);
+    background:transparent;
+    color:var(--cream);
+    transition:all .15s ease;
+  }
+  .btn:hover{background:var(--navy-mid);}
+  .btn-gold{
+    background:var(--gold);
+    color:var(--navy-deep);
+    border-color:var(--gold);
+  }
+  .btn-gold:hover{background:var(--gold-pale);}
+  .btn:disabled{opacity:0.4; cursor:not-allowed;}
+  .btn:disabled:hover{background:transparent;}
+
+  main{max-width:760px; margin:0 auto; padding:40px 20px 90px;}
+
+  .panel{
+    background:var(--navy);
+    border:1px solid var(--navy-light);
+    border-radius:14px;
+    padding:32px;
+  }
+  .panel + .panel{margin-top:24px;}
+
+  /* --- Step 0: entry --- */
+  #entryView label{
+    display:block;
+    font-weight:600;
+    color:var(--gold-pale);
+    margin-bottom:8px;
+    font-size:14px;
+  }
+  #entryView p{color:var(--cream-soft);}
+  input[type=text]{
+    width:100%;
+    background:var(--navy-mid);
+    border:1px solid var(--navy-light);
+    color:var(--cream);
+    font-family:var(--font-sans);
+    font-size:16px;
+    padding:12px 14px;
+    border-radius:8px;
+  }
+  input[type=text]:focus{
+    outline:2px solid var(--gold);
+    outline-offset:1px;
+  }
+  #entryForm{display:flex; gap:10px; margin-top:6px; flex-wrap:wrap;}
+  #entryForm input{flex:1; min-width:200px;}
+
+  /* --- Terminal / timer bar --- */
+  .terminal-bar{
+    position:sticky; top:0; z-index:5;
+    background:var(--navy-deep);
+    border-bottom:1px solid var(--navy-light);
+    padding:14px 20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .terminal-bar .crew-id{
+    font-family:var(--font-mono);
+    font-size:13px;
+    color:var(--gold-pale);
+  }
+  .terminal-bar .timer{
+    font-family:var(--font-mono);
+    font-size:20px;
+    font-weight:700;
+    color:var(--gold);
+    letter-spacing:0.05em;
+  }
+
+  /* --- Station cards --- */
+  .station-card .station-head{
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .station-num{
+    font-family:var(--font-mono);
+    color:var(--gold-deep);
+    font-size:14px;
+  }
+  .station-card h2{
+    font-family:var(--font-serif);
+    font-size:22px;
+    color:var(--gold);
+    margin:0;
+  }
+  .station-prompt{
+    color:var(--cream-soft);
+    font-size:15px;
+    margin-bottom:16px;
+  }
+  .transmission{
+    font-family:var(--font-mono);
+    font-size:18px;
+    letter-spacing:0.05em;
+    background:var(--navy-mid);
+    border-left:3px solid var(--gold);
+    padding:12px 16px;
+    border-radius:6px;
+    margin-bottom:16px;
+    color:var(--gold-pale);
+  }
+  .station-input-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .station-input-row input{flex:1; min-width:180px;}
+  .station-status{
+    margin-top:12px;
+    font-size:14px;
+    font-weight:600;
+    min-height:20px;
+  }
+  .station-status.correct{color:var(--ok-green);}
+  .station-status.wrong{color:var(--stamp-red);}
+  .station-status.logged{color:var(--gold-pale);}
+  .station-card.is-complete{border-color:var(--ok-green);}
+  .station-card.is-complete .station-head::after{
+    content:"✓ complete";
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--ok-green);
+    margin-left:auto;
+  }
+
+  #finalReportRow{
+    text-align:center;
+    margin-top:8px;
+  }
+  #finalReportRow p{color:var(--cream-soft); font-size:14px;}
+
+  /* --- Certificate --- */
+  #certificateView{display:none;}
+  #certificateView.show{display:block;}
+  .certificate{
+    background:var(--navy);
+    border:2px solid var(--gold);
+    border-radius:14px;
+    padding:44px 36px;
+    text-align:center;
+  }
+  .cert-seal{
+    width:76px; height:76px;
+    margin:0 auto 12px;
+    filter:drop-shadow(0 0 6px rgba(212,175,85,0.35));
+  }
+  .certificate .eyebrow{display:block; margin-bottom:6px;}
+  .certificate h2{
+    font-family:var(--font-serif);
+    font-size:clamp(1.8rem,4vw,2.6rem);
+    color:var(--gold);
+    margin:4px 0 6px;
+  }
+  .certificate .crew-time{
+    font-family:var(--font-mono);
+    color:var(--gold-pale);
+    font-size:15px;
+    margin-bottom:28px;
+  }
+  .cert-stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+    gap:16px;
+    text-align:left;
+    margin:20px 0 30px;
+  }
+  .cert-stat{
+    background:var(--navy-mid);
+    border:1px solid var(--navy-light);
+    border-radius:10px;
+    padding:14px 16px;
+  }
+  .cert-stat .label{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--gold-deep);
+    display:block;
+    margin-bottom:4px;
+  }
+  .cert-stat .value{font-size:16px; font-weight:600;}
+  .cert-signoff{
+    border-top:1px solid var(--navy-light);
+    padding-top:16px;
+    margin-top:6px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:6px;
+    text-align:left;
+  }
+  .cert-signoff .sign-line{
+    font-family:var(--font-serif);
+    font-style:italic;
+    font-size:17px;
+    color:var(--gold-pale);
+  }
+  .cert-signoff .sign-label{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:0.06em;
+    color:var(--cream-soft);
+  }
+  .cert-actions{
+    display:flex; gap:12px; justify-content:center; flex-wrap:wrap;
+    margin-top:10px;
+  }
+
+  /* --- Gameplay view toggling --- */
+  #gameplayView{display:block;}
+  #gameplayView.hide{display:none;}
+  #entryView.hide{display:none;}
+
+  footer{
+    text-align:center;
+    padding:30px 20px 50px;
+    color:var(--navy-light);
+    font-size:12px;
+    font-family:var(--font-mono);
+  }
+
+  /* ============================================================
+     PRINTABLES — station cards & certificate, screen-hidden
+     ============================================================ */
+  #printStationsRoot, #printCertRoot{display:none;}
+
+  @media print{
+    @page{ margin:0.5in; }
+    body *{visibility:hidden;}
+    #printArea, #printArea *{visibility:visible;}
+    #printArea{
+      position:absolute; top:0; left:0; width:100%;
+      background:#fff; color:#1a1a1a;
+    }
+
+    /* ---- station cards ---- */
+    .print-card{
+      page-break-inside:avoid;
+      position:relative;
+      border:2px solid #1a1a1a;
+      border-radius:6px;
+      padding:26px 26px 20px;
+      margin:0 0 28px;
+    }
+    .print-card::before{
+      content:"";
+      position:absolute; inset:6px;
+      border:1px solid #8b6914;
+      border-radius:3px;
+      pointer-events:none;
+    }
+    .pc-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:4px;
+    }
+    .pc-badge{
+      width:40px; height:40px;
+      border-radius:50%;
+      border:2px solid #8b6914;
+      display:flex; align-items:center; justify-content:center;
+      font-family:var(--font-serif);
+      font-weight:700;
+      font-size:17px;
+      color:#8b6914;
+      flex-shrink:0;
+    }
+    .pc-type-tag{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      font-family:var(--font-mono);
+      font-size:10px;
+      letter-spacing:0.1em;
+      text-transform:uppercase;
+      color:#8b6914;
+      border:1px solid #8b6914;
+      border-radius:999px;
+      padding:5px 12px;
+    }
+    .pc-type-tag svg{width:13px; height:13px; stroke:#8b6914;}
+    .print-card h2{
+      font-family:var(--font-serif);
+      font-size:26px;
+      margin:14px 0 12px;
+      color:#1a1a1a;
+    }
+    .print-card p{font-size:14px; color:#2a2a2a; margin:0 0 10px;}
+    .print-transmission{
+      font-family:var(--font-mono);
+      font-size:19px;
+      letter-spacing:0.06em;
+      text-align:center;
+      border:1px dashed #8b6914;
+      border-radius:4px;
+      padding:12px 14px;
+      margin:14px 0;
+      color:#1a1a1a;
+    }
+    .print-footer-note{
+      font-size:11.5px; color:#555; margin-top:10px; font-style:italic;
+    }
+    .pc-corner{
+      position:absolute; bottom:14px; right:18px;
+      font-family:var(--font-mono); font-size:9px; letter-spacing:0.15em;
+      color:#c2b98c; text-transform:uppercase;
+    }
+
+    /* ---- certificate ---- */
+    .print-cert{
+      position:relative;
+      border:3px double #8b6914;
+      padding:52px 46px 40px;
+      text-align:center;
+    }
+    .print-cert::before{
+      content:"";
+      position:absolute; inset:11px;
+      border:1px solid #d8cba0;
+      pointer-events:none;
+    }
+    .print-seal{ width:80px; height:80px; margin:0 auto 8px; }
+    .print-cert .pc-eyebrow{
+      font-family:var(--font-mono); font-size:12px; letter-spacing:0.2em;
+      text-transform:uppercase; color:#8b6914;
+    }
+    .print-cert h2{
+      font-family:var(--font-serif); font-size:36px; margin:10px 0 4px; color:#1a1a1a;
+    }
+    .print-cert .pc-sub{
+      font-family:var(--font-mono); font-size:13px; color:#555; margin-bottom:28px;
+    }
+    .print-cert-stats{
+      display:grid; grid-template-columns:1fr 1fr; gap:14px;
+      text-align:left; margin:0 auto 32px; max-width:440px;
+    }
+    .print-cert-stat{ border:1px solid #ccc; border-radius:6px; padding:10px 14px; }
+    .print-cert-stat .label{
+      font-family:var(--font-mono); font-size:10px; letter-spacing:0.08em;
+      text-transform:uppercase; color:#8b6914; display:block; margin-bottom:3px;
+    }
+    .print-cert-stat .value{ font-size:15px; font-weight:600; color:#1a1a1a; }
+    .print-cert-signoff{
+      display:flex; justify-content:space-between; align-items:flex-end;
+      margin-top:30px; padding-top:14px; border-top:1px solid #ccc;
+      text-align:left;
+    }
+    .print-cert-signoff .sign-line{
+      font-family:var(--font-serif); font-style:italic; font-size:17px; color:#1a1a1a;
+    }
+    .print-cert-signoff .sign-label{
+      font-family:var(--font-mono); font-size:10px; letter-spacing:0.08em;
+      text-transform:uppercase; color:#777; margin-top:3px;
+    }
+  }
+
+  @media (max-width:600px){
+    header.site-header{padding:40px 16px 30px;}
+    main{padding:28px 14px 70px;}
+    .panel{padding:22px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <svg class="rosette" viewBox="0 0 200 200" aria-hidden="true">
+    <circle cx="100" cy="100" r="96" fill="none" stroke="#d4af55" stroke-width="1"/>
+    <circle cx="100" cy="100" r="70" fill="none" stroke="#d4af55" stroke-width="1"/>
+    <g stroke="#d4af55" stroke-width="1">
+      <line x1="100" y1="4" x2="100" y2="196"/>
+      <line x1="4" y1="100" x2="196" y2="100"/>
+      <line x1="30" y1="30" x2="170" y2="170"/>
+      <line x1="170" y1="30" x2="30" y2="170"/>
+    </g>
+    <polygon points="100,20 110,100 100,180 90,100" fill="#d4af55"/>
+    <polygon points="20,100 100,90 180,100 100,110" fill="#d4af55"/>
+  </svg>
+  <p class="eyebrow">First-Week Team Challenge</p>
+  <h1 class="site-title">Basecamp Escape Room</h1>
+  <p class="site-tagline">Every expedition crew has to prove they can work together before setting off. Complete the challenges posted around the room, then radio your codes in below.</p>
+  <div class="header-actions">
+    <button class="btn" id="printStationsBtn" type="button">Print Station Cards</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- STEP 0: entry -->
+  <section class="panel" id="entryView">
+    <label for="teamIdInput">Enter your table or team number to begin</label>
+    <p>This just helps everyone keep track of their own terminal — it's not graded.</p>
+    <form id="entryForm">
+      <input type="text" id="teamIdInput" placeholder="e.g. Table 4" autocomplete="off">
+      <button class="btn btn-gold" type="submit">Begin Expedition</button>
+    </form>
+  </section>
+
+  <!-- GAMEPLAY -->
+  <div id="gameplayView" class="hide">
+    <div class="terminal-bar">
+      <span class="crew-id" id="crewIdLabel"></span>
+      <span class="timer" id="timerLabel">00:00</span>
+    </div>
+
+    <div id="stationList" style="margin-top:24px;"></div>
+
+    <div class="panel" id="finalReportRow" style="display:none;">
+      <p>All stations logged. Ready to radio in your final report?</p>
+      <button class="btn btn-gold" id="finalReportBtn" type="button">Radio In Final Report</button>
+    </div>
+  </div>
+
+  <!-- CERTIFICATE -->
+  <section id="certificateView">
+    <div class="certificate">
+      <svg class="cert-seal" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#d4af55" stroke-width="2"/>
+        <circle cx="50" cy="50" r="37" fill="none" stroke="#d4af55" stroke-width="1"/>
+        <polygon points="50,18 57,50 50,82 43,50" fill="#d4af55"/>
+        <polygon points="18,50 50,43 82,50 50,57" fill="#d4af55"/>
+      </svg>
+      <span class="eyebrow">Basecamp Established</span>
+      <h2 id="certCrewName">Crew Name</h2>
+      <p class="crew-time" id="certMeta"></p>
+      <div class="cert-stats" id="certStats"></div>
+      <div class="cert-signoff">
+        <span class="sign-line">Basecamp Command</span>
+        <span class="sign-label">Authorized · Shrake Development Labs</span>
+      </div>
+      <div class="cert-actions">
+        <button class="btn" id="printCertBtn" type="button">Print Certificate</button>
+        <button class="btn btn-gold" id="startOverBtn" type="button">Start Over</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>SHRAKE DEVELOPMENT LABS &middot; IB DP GEOGRAPHY SL</footer>
+
+<!-- ============================================================
+     PRINT AREA (screen-hidden; rendered only via window.print())
+     ============================================================ -->
+<div id="printArea" style="display:none;">
+  <div id="printStationsRoot"></div>
+  <div id="printCertRoot"></div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  var teamId = '';
+  var startTime = null;
+  var endTime = null;
+  var timerInterval = null;
+  var stationState = {}; // id -> { value:'', status:'pending' }
+
+  STATIONS.forEach(function(s){
+    stationState[s.id] = { value:'', status:'pending' };
+  });
+
+  function normalizeAnswer(str){
+    return String(str||'').toUpperCase().trim().replace(/[^A-Z]/g,'');
+  }
+
+  function pad(n){ return n < 10 ? '0'+n : ''+n; }
+  function formatElapsed(ms){
+    var totalSec = Math.floor(ms/1000);
+    var m = Math.floor(totalSec/60);
+    var s = totalSec % 60;
+    return pad(m)+':'+pad(s);
+  }
+
+  function renderStations(){
+    var root = document.getElementById('stationList');
+    root.innerHTML = '';
+    STATIONS.forEach(function(s){
+      var st = stationState[s.id];
+      var card = document.createElement('div');
+      card.className = 'panel station-card' + (st.status==='correct'||st.status==='logged' ? ' is-complete' : '');
+      card.id = 'station-'+s.id;
+
+      var html = '';
+      html += '<div class="station-head"><span class="station-num">STATION '+s.number+'</span><h2>'+s.title+'</h2></div>';
+      html += '<p class="station-prompt">'+s.prompt+'</p>';
+      if(s.type === 'verified'){
+        html += '<div class="transmission">'+s.transmission+'</div>';
+      }
+      html += '<div class="station-input-row">';
+      html += '<input type="text" id="input-'+s.id+'" placeholder="'+s.placeholder+'" value="'+(st.value||'').replace(/"/g,'&quot;')+'" '+((st.status==='correct')?'disabled':'')+'>';
+      html += '<button class="btn btn-gold" data-station="'+s.id+'" type="button">'+(s.type==='verified' ? 'Check Code' : 'Log It')+'</button>';
+      html += '</div>';
+      html += '<p class="station-status '+st.status+'" id="status-'+s.id+'" aria-live="polite">'+statusText(s, st)+'</p>';
+
+      card.innerHTML = html;
+      root.appendChild(card);
+    });
+
+    // wire buttons
+    root.querySelectorAll('button[data-station]').forEach(function(btn){
+      btn.addEventListener('click', function(){ submitStation(parseInt(btn.dataset.station,10)); });
+    });
+    root.querySelectorAll('input[type=text]').forEach(function(inp){
+      inp.addEventListener('keydown', function(e){
+        if(e.key === 'Enter'){
+          var id = parseInt(inp.id.replace('input-',''),10);
+          submitStation(id);
+        }
+      });
+    });
+
+    checkAllComplete();
+  }
+
+  function statusText(s, st){
+    if(s.type === 'verified'){
+      if(st.status === 'correct') return 'Confirmed — codeword accepted.';
+      if(st.status === 'wrong') return 'Not quite. Recheck the cipher and try again.';
+      return '';
+    }
+    if(st.status === 'logged') return 'Logged. You can update it any time before you radio in.';
+    return '';
+  }
+
+  function submitStation(id){
+    var s = STATIONS.find(function(x){ return x.id === id; });
+    var st = stationState[id];
+    var inputEl = document.getElementById('input-'+id);
+    var raw = inputEl.value;
+
+    if(s.type === 'verified'){
+      if(normalizeAnswer(raw) === s.answer){
+        st.status = 'correct';
+        st.value = raw;
+      } else {
+        st.status = 'wrong';
+        st.value = raw;
+      }
+    } else {
+      if(raw.trim().length === 0){
+        st.status = 'pending';
+      } else {
+        st.status = 'logged';
+        st.value = raw.trim();
+      }
+    }
+    renderStations();
+  }
+
+  function checkAllComplete(){
+    var allDone = STATIONS.every(function(s){
+      var st = stationState[s.id];
+      return st.status === 'correct' || st.status === 'logged';
+    });
+    document.getElementById('finalReportRow').style.display = allDone ? 'block' : 'none';
+  }
+
+  function startTimer(){
+    startTime = Date.now();
+    timerInterval = setInterval(function(){
+      document.getElementById('timerLabel').textContent = formatElapsed(Date.now() - startTime);
+    }, 1000);
+  }
+
+  function stopTimer(){
+    endTime = Date.now();
+    if(timerInterval) clearInterval(timerInterval);
+  }
+
+  document.getElementById('entryForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var val = document.getElementById('teamIdInput').value.trim();
+    teamId = val || 'Unnamed Crew';
+    document.getElementById('entryView').classList.add('hide');
+    document.getElementById('gameplayView').classList.remove('hide');
+    document.getElementById('crewIdLabel').textContent = teamId.toUpperCase();
+    startTimer();
+    renderStations();
+  });
+
+  document.getElementById('finalReportBtn').addEventListener('click', function(){
+    stopTimer();
+    showCertificate();
+  });
+
+  function showCertificate(){
+    document.getElementById('gameplayView').classList.add('hide');
+    var certView = document.getElementById('certificateView');
+    certView.classList.add('show');
+
+    var crewName = (stationState[5].value || teamId).toUpperCase();
+    document.getElementById('certCrewName').textContent = 'Crew ' + crewName;
+    document.getElementById('certMeta').textContent = teamId + ' · Completed in ' + formatElapsed(endTime - startTime);
+
+    var statsHtml = '';
+    statsHtml += certStat('Manifest Count', stationState[1].value || '—');
+    statsHtml += certStat('Common Ground Number', stationState[3].value || '—');
+    statsHtml += certStat('Supply Codeword', normalizeAnswer(stationState[2].value) || '—');
+    statsHtml += certStat('Icebreaker Codeword', normalizeAnswer(stationState[4].value) || '—');
+    document.getElementById('certStats').innerHTML = statsHtml;
+
+    buildPrintCert(crewName, teamId, formatElapsed(endTime - startTime), [
+      { label:'Manifest Count', value: stationState[1].value || '—' },
+      { label:'Common Ground Number', value: stationState[3].value || '—' },
+      { label:'Supply Codeword', value: normalizeAnswer(stationState[2].value) || '—' },
+      { label:'Icebreaker Codeword', value: normalizeAnswer(stationState[4].value) || '—' }
+    ]);
+  }
+
+  function certStat(label, value){
+    return '<div class="cert-stat"><span class="label">'+label+'</span><span class="value">'+value+'</span></div>';
+  }
+
+  document.getElementById('startOverBtn').addEventListener('click', function(){
+    STATIONS.forEach(function(s){ stationState[s.id] = { value:'', status:'pending' }; });
+    teamId = '';
+    document.getElementById('teamIdInput').value = '';
+    document.getElementById('certificateView').classList.remove('show');
+    document.getElementById('entryView').classList.remove('hide');
+  });
+
+  /* ---------- Printables ---------- */
+  var ICON_LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+  var ICON_CREW = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9.5" r="2.3"/><path d="M3 20c0-3.2 2.6-5.5 6-5.5s6 2.3 6 5.5"/><path d="M15.5 14.8c2.4.2 4 2.4 4 5.2"/></svg>';
+  var SEAL_SVG = '<svg class="print-seal" viewBox="0 0 100 100" aria-hidden="true">' +
+    '<circle cx="50" cy="50" r="46" fill="none" stroke="#8b6914" stroke-width="2"/>' +
+    '<circle cx="50" cy="50" r="37" fill="none" stroke="#8b6914" stroke-width="1"/>' +
+    '<polygon points="50,18 57,50 50,82 43,50" fill="#8b6914"/>' +
+    '<polygon points="18,50 50,43 82,50 50,57" fill="#8b6914"/>' +
+    '</svg>';
+
+  function buildPrintStations(){
+    var root = document.getElementById('printStationsRoot');
+    var html = '';
+    STATIONS.forEach(function(s){
+      var isVerified = s.type === 'verified';
+      html += '<div class="print-card">';
+      html += '<div class="pc-top">';
+      html += '<span class="pc-badge">'+s.number+'</span>';
+      html += '<span class="pc-type-tag">'+(isVerified ? ICON_LOCK : ICON_CREW)+(isVerified ? 'Cipher Lock' : 'Team Check-In')+'</span>';
+      html += '</div>';
+      html += '<h2>'+s.title+'</h2>';
+      html += '<p>'+s.prompt+'</p>';
+      if(isVerified){
+        html += '<div class="print-transmission">'+s.transmission+'</div>';
+      }
+      html += '<p class="print-footer-note">Radio your answer in at the Basecamp terminal — "'+s.inputLabel+'".</p>';
+      html += '<span class="pc-corner">Basecamp Escape Room</span>';
+      html += '</div>';
+    });
+    root.innerHTML = html;
+  }
+
+  function buildPrintCert(crewName, teamIdVal, elapsed, stats){
+    var root = document.getElementById('printCertRoot');
+    var statsHtml = stats.map(function(st){
+      return '<div class="print-cert-stat"><span class="label">'+st.label+'</span><span class="value">'+st.value+'</span></div>';
+    }).join('');
+    root.innerHTML =
+      '<div class="print-cert">' +
+      SEAL_SVG +
+      '<p class="pc-eyebrow">Basecamp Established</p>' +
+      '<h2>Crew '+crewName+'</h2>' +
+      '<p class="pc-sub">'+teamIdVal+' &middot; Completed in '+elapsed+'</p>' +
+      '<div class="print-cert-stats">'+statsHtml+'</div>' +
+      '<div class="print-cert-signoff">' +
+      '<span><span class="sign-line">Basecamp Command</span><br><span class="sign-label">Authorized &middot; Shrake Development Labs</span></span>' +
+      '</div>' +
+      '</div>';
+  }
+
+  document.getElementById('printStationsBtn').addEventListener('click', function(){
+    buildPrintStations();
+    document.getElementById('printStationsRoot').style.display = 'block';
+    document.getElementById('printCertRoot').style.display = 'none';
+    document.getElementById('printArea').style.display = 'block';
+    window.print();
+    document.getElementById('printArea').style.display = 'none';
+  });
+
+  document.getElementById('printCertBtn').addEventListener('click', function(){
+    document.getElementById('printStationsRoot').style.display = 'none';
+    document.getElementById('printCertRoot').style.display = 'block';
+    document.getElementById('printArea').style.display = 'block';
+    window.print();
+    document.getElementById('printArea').style.display = 'none';
+  });
+
+})();
+</script>
+</body>
+</html>
